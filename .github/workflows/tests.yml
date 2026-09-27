@@ -1,0 +1,41 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+
+  canonical-contract:
+    name: Canonical contract (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pinned canonical v0.2 contract and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pytest>=7.4" "canonical-snapshot @ git+https://github.com/ColonelKernel/session-state-analyzer@159602384148650c4ca15fce82b6a73abff86820#subdirectory=packages/canonical_snapshot"
+      - name: Run canonical conformance tests (no skips permitted)
+        run: |
+          python -c "import canonical_snapshot"
+          python -m pytest -q tests/test_canonical_export.py --junitxml=canonical-results.xml
+          python - <<'PYTHON'
+          import xml.etree.ElementTree as ET
+          suites = ET.parse("canonical-results.xml").getroot().iter("testsuite")
+          counts = {key: 0 for key in ("tests", "skipped", "failures", "errors")}
+          for suite in suites:
+              for key in counts:
+                  counts[key] += int(suite.get(key, "0"))
+          if counts["tests"] == 0 or any(counts[key] for key in ("skipped", "failures", "errors")):
+              raise SystemExit(f"Canonical conformance requires passing, non-skipped tests: {counts}")
+          print(f"Canonical conformance: {counts['tests']} tests passed, no skips")
+          PYTHON
