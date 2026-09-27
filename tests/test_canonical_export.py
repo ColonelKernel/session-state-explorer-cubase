@@ -12,8 +12,8 @@ import os
 
 import pytest
 
-# The shared contract package lives in the analyzer repo and is installed only
-# in dev environments; skip cleanly in CI without it (sibling-repo policy).
+# Optional for core local tests; the canonical-contract CI job installs the
+# pinned contract and rejects skipped conformance tests.
 pytest.importorskip("canonical_snapshot")
 
 from canonical_snapshot import validate_snapshot  # noqa: E402

@@ -169,3 +169,21 @@ User-owned projects, public documentation, public APIs, controlled exports and
 controlled binary comparisons only. No DRM/encryption bypass, no redistribution
 of Steinberg proprietary code, no promotion of reverse-engineered guesses to
 "specification". See the [EXTERNAL_RESEARCH_LEDGER](docs/EXTERNAL_RESEARCH_LEDGER.md).
+
+
+### Canonical contract CI
+
+The `canonical-contract` job installs the shared v0.2 contract from analyzer
+commit `159602384148650c4ca15fce82b6a73abff86820` and runs `tests/test_canonical_export.py`
+on Python 3.10 and 3.12. A missing dependency, failed test, empty suite, or skipped
+conformance test fails the job; the contract install is not best-effort. Core
+local tests may still omit this optional dependency. Updating the contract pin
+requires reviewing the conformance results. This workflow does not configure
+GitHub branch-protection rules.
+
+To reproduce the contract check locally:
+
+```sh
+python -m pip install "pytest>=7.4" "canonical-snapshot @ git+https://github.com/ColonelKernel/session-state-analyzer@159602384148650c4ca15fce82b6a73abff86820#subdirectory=packages/canonical_snapshot"
+python -m pytest -q tests/test_canonical_export.py
+```
